@@ -1,8 +1,13 @@
 ---
 const { aspectRatio = '4 / 3' } = Astro.props
+const isDev = import.meta.env.DEV
 ---
 
 <div id="three-canvas-container" style={`width: 100%; aspect-ratio: ${aspectRatio}; position: relative;`}></div>
-<script type="module">
-  import '/src/components/base/threeCanvasClient.ts'
-</script>
+{
+  isDev ? (
+    <script type="module">import '/src/components/base/threeCanvasClient.ts'</script>
+  ) : (
+    <script type="module" src="./threeCanvasClient.ts" />
+  )
+}
