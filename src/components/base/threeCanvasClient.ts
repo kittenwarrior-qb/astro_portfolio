@@ -6,6 +6,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
   const container = document.getElementById('three-canvas-container') as HTMLElement | null
   if (!container) return
 
+  const isDev = (import.meta as any).env?.DEV ?? false
+  const baseEnv = (import.meta as any).env?.BASE_URL || '/'
+  const base = isDev ? '/' : baseEnv
+
   const scene = new THREE.Scene()
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -37,8 +41,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
   let mixer: THREE.AnimationMixer | null = null
 
   const loader = new GLTFLoader()
-  const base = (import.meta as any).env?.BASE_URL || '/'
   const modelUrl = base.endsWith('/') ? base + 'the_dog_song.glb' : base + '/the_dog_song.glb'
+  if (isDev) console.debug('[ThreeCanvas] loading model', { modelUrl, base })
   loader.load(
     modelUrl,
     (gltf) => {
@@ -69,7 +73,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
     },
     undefined,
     (err) => {
-      console.error('GLB load error', { url: modelUrl, base, error: err })
+      console.error('[ThreeCanvas] GLB load error', { url: modelUrl, base, isDev, error: err })
     }
   )
 
