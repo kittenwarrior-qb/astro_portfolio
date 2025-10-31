@@ -44,6 +44,7 @@ const projects = defineCollection({
       website: z.string(),
       type: z.string(),
       icon: image().optional(),
+      image: z.union([image(), z.string()]).optional(),
       imageClass: z.string().optional(),
       star: z.number(),
       fork: z.number(),

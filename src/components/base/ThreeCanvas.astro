@@ -1,0 +1,94 @@
+---
+const { aspectRatio = '4 / 3' } = Astro.props
+---
+
+<div id="three-canvas-container" style={`width: 100%; aspect-ratio: ${aspectRatio}; position: relative;`}></div>
+<script type="module" is:inline>
+  import * as THREE from 'https://esm.sh/three@0.161.0'
+  import { OrbitControls } from 'https://esm.sh/three@0.161.0/examples/jsm/controls/OrbitControls.js'
+  import { GLTFLoader } from 'https://esm.sh/three@0.161.0/examples/jsm/loaders/GLTFLoader.js'
+
+  const container = document.getElementById('three-canvas-container')
+  if (!container) {
+    console.warn('ThreeCanvas: container not found')
+  } else {
+    const scene = new THREE.Scene()
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setSize(container.clientWidth, container.clientHeight)
+    container.appendChild(renderer.domElement)
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000)
+    camera.position.set(0, 1, 3)
+
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.enablePan = false
+    controls.enableZoom = true
+    controls.minDistance = 1
+    controls.maxDistance = 6
+    controls.minPolarAngle = Math.PI * 0.15
+    controls.maxPolarAngle = Math.PI * 0.85
+    controls.minAzimuthAngle = -Math.PI / 2
+    controls.maxAzimuthAngle = Math.PI / 2
+
+    // Basic lighting so we can preserve original PBR materials
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0))
+    const dir = new THREE.DirectionalLight(0xffffff, 1.0)
+    dir.position.set(2, 3, 4)
+    scene.add(dir)
+
+    const clock = new THREE.Clock()
+    let mixer = null
+
+    const loader = new GLTFLoader()
+    loader.load('/the_dog_song.glb', (gltf) => {
+      const root = gltf.scene
+      // Preserve original materials (including BackSide/DblSide and textures)
+      // If the model contains an interior sky dome, its BackSide will now render
+
+      const box = new THREE.Box3().setFromObject(root)
+      const size = new THREE.Vector3()
+      const center = new THREE.Vector3()
+      box.getSize(size)
+      box.getCenter(center)
+      root.position.sub(center)
+      scene.add(root)
+
+      const maxDim = Math.max(size.x, size.y, size.z) || 1
+      const fitDist = maxDim / (2 * Math.tan((Math.PI * camera.fov) / 360))
+      camera.position.set(0, maxDim * 0.2, fitDist * 1.4)
+      controls.target.set(0, 0, 0)
+      controls.update()
+
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(root)
+        gltf.animations.forEach((clip) => {
+          const action = mixer.clipAction(clip)
+          action.setLoop(THREE.LoopRepeat, Infinity)
+          action.play()
+        })
+      }
+    })
+
+    const onResize = () => {
+      const width = container.clientWidth
+      const height = container.clientHeight
+      renderer.setSize(width, height)
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+    }
+    window.addEventListener('resize', onResize)
+
+    const tick = () => {
+      const delta = clock.getDelta()
+      if (mixer) mixer.update(delta)
+      controls.update()
+      renderer.render(scene, camera)
+      requestAnimationFrame(tick)
+    }
+    tick()
+  }
+</script>

@@ -10,6 +10,7 @@ import SkillsShowcase from '~/components/base/SkillsShowcase.astro'
 import { getNumPosts, getPinnedPosts, getAllProjects } from '~/lib/data'
 import { Image } from 'astro:assets'
 import { cn } from '~/lib/utils'
+import ThreeCanvas from '~/components/base/ThreeCanvas.astro'
 
 const { ENABLED, GITHUB_USERNAME, TOOLTIP_ENABLED } = GITHUB_CONFIG
 const { size, type } = POSTS_CONFIG.homePageConfig
@@ -24,36 +25,37 @@ if (hasPinnedPosts) {
   showPosts = await getNumPosts(size)
 }
 
-// fetch projects for Product section (show top 3)
 const projects = (await getAllProjects()).slice(0, 3)
 ---
 
 <Layout title="Readme" description={SITE.description}>
   <div class="relative z-1">
     <div class="py-8 pb-10 px-6 sm:px-8">
-      <h1 class="flex flex-col gap-2">
-        <span class="text-4xl sm:text-5xl tracking-tight">Hi, i'm Quoc Bui </span>
-        <span class="text-muted-foreground font-light text-xl sm:text-2xl block tracking-wide text-balance mt-2">
-          Web developer & Designer
-        </span>
-      </h1>
-      <div class="pro text-muted-foreground text-pretty">
-        <p>
-          Litos is a simple and modern Astro blog theme, focusing on content display and reading experience. What's more, it's not just a
-          blog, but also a place to showcase your personal skills, projects, and daily life.
-        </p>
-        <p>
-          Tailwind CSS is used to achieve an elegant responsive design, and React components are integrated to provide a smooth interactive
-          experience. It supports light and dark theme switching, is responsive, has a clean style, and offers a variety of configurable
-          article display layouts.
-        </p>
-      </div>
-      <div class="mt-6 flex gap-6">
-        {
-          SOCIAL_LINKS.map((item) => {
-            return <SocialLink href={item.url} icon={item.icon} aria-label={`Link of ${item.name}`} label="followers" />
-          })
-        }
+      <div class="flex flex-col sm:flex-row items-start gap-8">
+        <div class="basis-full sm:basis-3/5">
+          <h1 class="flex flex-col gap-2">
+            <span class="text-4xl sm:text-5xl tracking-tight">Hi, i'm Quoc Bui </span>
+            <span class="text-muted-foreground font-light text-xl sm:text-2xl block tracking-wide text-balance mt-2">
+              Web developer & Designer
+            </span>
+          </h1>
+          <div class="pro text-muted-foreground text-pretty">
+            <p>
+              An Information Technology student pursuing a career as a professional Web Developer. I am eager to learn and am looking for
+              opportunities to participate in real-world projects to develop new skills and gain experience.
+            </p>
+          </div>
+          <div class="mt-6 flex gap-6">
+            {
+              SOCIAL_LINKS.map((item) => {
+                return <SocialLink href={item.url} icon={item.icon} aria-label={`Link of ${item.name}`} label="followers" />
+              })
+            }
+          </div>
+        </div>
+        <div class="basis-full sm:basis-2/5">
+          <ThreeCanvas />
+        </div>
       </div>
     </div>
     {
@@ -90,13 +92,39 @@ const projects = (await getAllProjects()).slice(0, 3)
       <div class="grid grid-cols-1 gap-6">
         {
           projects.map((project) => (
-            <div class="group relative hover:bg-muted/30 dark:hover:bg-muted/30 transition-colors duration-300 px-6 sm:px-8 py-4 rounded-lg">
+            <div
+              class="group relative hover:bg-muted/30 dark:hover:bg-muted/30 transition-colors duration-300 px-6 sm:px-8 py-4 rounded-lg"
+              onmousemove="{const r=this.getBoundingClientRect(); const dx=event.clientX - r.left - r.width/2; const dy=event.clientY - r.top - r.height/2; this.style.setProperty('--tx', (dx*0.04)+'px'); this.style.setProperty('--ty', (dy*0.04)+'px');}"
+            >
               <div class="absolute right-8 top-4 hidden sm:block">
                 {project.data.type == 'icon' && <span class={cn('size-10', project.data.icon)} />}
                 {project.data.type == 'image' && project.data?.icon && (
                   <Image src={project.data.icon} alt="icon" width={40} height={40} class={cn(project.data.imageClass)} densities={[1, 2]} />
                 )}
               </div>
+              {project.data?.image && (
+                <div
+                  class="pointer-events-none absolute right-0 top-1/2 opacity-0 z-10 will-change-transform transition-opacity duration-400 ease-out group-hover:opacity-100"
+                  style="transform: translate(calc(var(--tx, 0px)), calc(-50% + var(--ty, 0px)));"
+                >
+                  {typeof project.data.image === 'string' ? (
+                    <img
+                      src={project.data.image}
+                      alt="preview"
+                      class="rounded-md object-cover shadow-lg w-[28rem] h-auto transition-transform duration-400 ease-out"
+                    />
+                  ) : (
+                    <Image
+                      src={project.data.image}
+                      alt="preview"
+                      width={448}
+                      height={280}
+                      class="rounded-md object-cover shadow-lg w-[28rem] h-auto transition-transform duration-400 ease-out"
+                      densities={[1, 2]}
+                    />
+                  )}
+                </div>
+              )}
               <a href={project.data.website} target="_blank" class="inline-flex items-center justify-between font-semibold text-lg/relaxed">
                 {project.data.name}
               </a>
