@@ -1,17 +1,6 @@
-# Litos
+# Portfolio
+![Screenshot of the portfolio](screenshot.png)
 
-A modern blog theme built with Astro.js and designed for developers.
-
-## Features
-
-- Built on Astro.js for lightning-fast builds
-- Responsive design, perfectly adaptable to all devices
-- Dark Mode support
-- Multiple post layouts (compact, image display, timeline)
-- Photo gallery display
-- Full-text search
-- Skill display component
-- Highly customizable
 
 ## Quick Start
 
