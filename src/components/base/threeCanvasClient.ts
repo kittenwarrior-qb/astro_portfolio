@@ -37,32 +37,41 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
   let mixer: THREE.AnimationMixer | null = null
 
   const loader = new GLTFLoader()
-  loader.load('/the_dog_song.glb', (gltf) => {
-    const root = gltf.scene
+  const base = (import.meta as any).env?.BASE_URL || '/'
+  const modelUrl = base.endsWith('/') ? base + 'the_dog_song.glb' : base + '/the_dog_song.glb'
+  loader.load(
+    modelUrl,
+    (gltf) => {
+      const root = gltf.scene
 
-    const box = new THREE.Box3().setFromObject(root)
-    const size = new THREE.Vector3()
-    const center = new THREE.Vector3()
-    box.getSize(size)
-    box.getCenter(center)
-    root.position.sub(center)
-    scene.add(root)
+      const box = new THREE.Box3().setFromObject(root)
+      const size = new THREE.Vector3()
+      const center = new THREE.Vector3()
+      box.getSize(size)
+      box.getCenter(center)
+      root.position.sub(center)
+      scene.add(root)
 
-    const maxDim = Math.max(size.x, size.y, size.z) || 1
-    const fitDist = maxDim / (2 * Math.tan((Math.PI * camera.fov) / 360))
-    camera.position.set(0, maxDim * 0.2, fitDist * 1.4)
-    controls.target.set(0, 0, 0)
-    controls.update()
+      const maxDim = Math.max(size.x, size.y, size.z) || 1
+      const fitDist = maxDim / (2 * Math.tan((Math.PI * camera.fov) / 360))
+      camera.position.set(0, maxDim * 0.2, fitDist * 1.4)
+      controls.target.set(0, 0, 0)
+      controls.update()
 
-    if (gltf.animations && gltf.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(root)
-      gltf.animations.forEach((clip) => {
-        const action = mixer!.clipAction(clip)
-        action.setLoop(THREE.LoopRepeat, Infinity)
-        action.play()
-      })
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(root)
+        gltf.animations.forEach((clip) => {
+          const action = mixer!.clipAction(clip)
+          action.setLoop(THREE.LoopRepeat, Infinity)
+          action.play()
+        })
+      }
+    },
+    undefined,
+    (err) => {
+      console.error('GLB load error', { url: modelUrl, base, error: err })
     }
-  })
+  )
 
   const onResize = () => {
     const width = container.clientWidth
